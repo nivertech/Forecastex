@@ -1,0 +1,10 @@
+defrecord Report, latitude:       nil,
+                  longitude:      nil,
+                  time:           nil, 
+                  summary:        nil,
+                  temperature:    nil,
+                  sunrise:        nil, 
+                  sunset:         nil, 
+                  humidity:       nil,
+                  wind_speed:     nil,
+                  wind_direction: nil
