@@ -44,6 +44,13 @@ defmodule Weather.Forecast do
 	  :gen_server.call :forecast, { :get_hourly_forecast, latitude, longitude, time }
 	end
 	
+	@doc """
+	Returns just the daily forecast as a list of Report records.
+	"""
+	def get_daily_forecast(latitude, longitude, time // nil) do
+	  :gen_server.call :forecast, { :get_daily_forecast, latitude, longitude, time }
+	end
+	
 	##################
 	# Helper methods #
 	##################
@@ -57,6 +64,12 @@ defmodule Weather.Forecast do
 	  Weather.Forecast.fetch(api_key, latitude, longitude, time)
   	  |> decode_response
 	    |> extract_hourly_data
+	end
+	
+	def process_daily_forecast(api_key, latitude, longitude, time // nil) do
+	  Weather.Forecast.fetch(api_key, latitude, longitude, time)
+  	  |> decode_response
+	    |> extract_daily_data
 	end
 	
 	def fetch(api_key, latitude, longitude, time // nil) do
@@ -83,6 +96,15 @@ defmodule Weather.Forecast do
 	  longitude = ListDict.get(response, @longitude)
 	  response
 	    |> ListDict.get(@hourly)
+	    |> ListDict.get(@data)
+	    |> generate_reports(latitude, longitude)
+	end
+	
+	def extract_daily_data(response) do
+	  latitude = ListDict.get(response, @latitude)
+	  longitude = ListDict.get(response, @longitude)
+	  response
+	    |> ListDict.get(@daily)
 	    |> ListDict.get(@data)
 	    |> generate_reports(latitude, longitude)
 	end
@@ -118,6 +140,10 @@ defmodule Weather.Forecast do
   
   def handle_call( { :get_hourly_forecast, latitude, longitude, time }, _from, api_key ) do
     { :reply, process_hourly_forecast(api_key, latitude, longitude, time), api_key }
+  end
+  
+  def handle_call( { :get_daily_forecast, latitude, longitude, time }, _from, api_key ) do
+    { :reply, process_daily_forecast(api_key, latitude, longitude, time), api_key }
   end
   
   def format_status(_reason, [ _pdict, api_key ]) do
